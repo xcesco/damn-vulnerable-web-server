@@ -1,20 +1,19 @@
-//
-// Created by sams on 10/06/2023.
-//
-#include <stdio.h>
-#include <string.h>
+// error_handling.cpp
+
+#include <cstdio>  // for FILE, snprintf, strlen
+#include <cstring> // for strerror
 #include <sys/socket.h>
+#include <unistd.h> // for close
+#include <iostream> // for perror and error handling
+
 #define MAX_REQUEST_SIZE 1024
 #define ROOT_DIR "/tmp/html_files/"
 
 #include "request_logger.h"
-
-
 #include "error_handling.h"
 
-
-
 void send_error_response(int client_socket, int status_code, const char* status_text, const char* requested_page) {
+    // Construct the response header
     char response_header[200];
     snprintf(response_header, sizeof(response_header), "HTTP/1.1 %d %s\r\nContent-Type: text/html\r\n\r\n", status_code, status_text);
 
@@ -34,4 +33,3 @@ void send_error_response(int client_socket, int status_code, const char* status_
         return;
     }
 }
-

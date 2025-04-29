@@ -1,8 +1,16 @@
-//
-// Created by sams on 10/06/2023.
-//
+// error_handling.h
 
-#ifndef UNTITLED11_ERROR_HANDLING_H
-#define UNTITLED11_ERROR_HANDLING_H
+#ifndef ERROR_HANDLING_H
+#define ERROR_HANDLING_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void send_error_response(int client_socket, int status_code, const char* status_text, const char* requested_page);
-#endif //UNTITLED11_ERROR_HANDLING_H
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // ERROR_HANDLING_H

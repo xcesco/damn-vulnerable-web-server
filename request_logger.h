@@ -1,9 +1,8 @@
-//
-// Created by sams on 08/06/2023.
-//
+#ifndef DAMN_VULNERABLE_WEB_SERVER_REQUEST_LOGGER_H
+#define DAMN_VULNERABLE_WEB_SERVER_REQUEST_LOGGER_H
 
-#ifndef UNTITLED11_REQUEST_LOGGER_H
-#define UNTITLED11_REQUEST_LOGGER_H
-void log_request_response(const char *request, const char *response);
+#include <string>
 
-#endif //UNTITLED11_REQUEST_LOGGER_H
+void log_request_response(const std::string& request, const std::string& response);
+
+#endif // DAMN_VULNERABLE_WEB_SERVER_REQUEST_LOGGER_H
