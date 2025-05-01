@@ -17,6 +17,13 @@ add_executable(damn_vulnerable_web_server
     base64.cpp
 )
 
+# Only apply flags after target is defined
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    target_compile_options(damn_vulnerable_web_server PRIVATE -fno-stack-protector -z execstack -no-pie)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    target_compile_options(damn_vulnerable_web_server PRIVATE -fno-stack-protector)
+endif()
+
 target_include_directories(damn_vulnerable_web_server PRIVATE ${OPENSSL_INCLUDE_DIR})
 
 target_link_libraries(damn_vulnerable_web_server PRIVATE OpenSSL::SSL OpenSSL::Crypto)

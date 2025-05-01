@@ -99,7 +99,7 @@ int perform_authentication(int client_socket, const std::string& file_path, cons
     std::string filename = (filename_pos != std::string::npos) ? file_path.substr(filename_pos + 1) : file_path;
 
     // Check if the requested file path requires authentication
-    if (filename.find("echo.php") != std::string::npos || filename.find("g.php") != std::string::npos) {
+    if (filename.find("test/echo.php") != std::string::npos || filename.find("g.php") != std::string::npos) {
         // Extract the "Authorization" header value
         std::string authorization_header = extract_header_value(request, "Authorization:");
 

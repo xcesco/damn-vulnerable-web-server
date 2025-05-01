@@ -12,16 +12,21 @@ void log_request_response(const std::string& request, const std::string& respons
     char timestamp[20];
     std::strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", time_info);
 
-    // Open the log file in append mode
-    std::ofstream log_file("/tmp/server.log", std::ios_base::app);
+    // Open the log file in append mode using FILE* for fprintf
+    FILE* log_file = fopen("/tmp/server.log", "a");
     if (!log_file) {
         std::cerr << "Failed to open log file" << std::endl;
         return;
     }
 
-    // Use printf-style formatting for logging
-    log_file << "[" << timestamp << "] Request:\n" << request << "\n\n";
-    log_file << "[" << timestamp << "] Response:\n" << response << "\n\n";
+    // Vulnerable part: using fprintf with user-controlled data (request/response)
+    fprintf(log_file, "[%s] Request:\n", timestamp);
+    fprintf(log_file, request.c_str());  // Vulnerable line - format string injection possible
+    fprintf(log_file, "\n\n");
 
-    // Log file is automatically closed when ofstream goes out of scope
+    fprintf(log_file, "[%s] Response:\n", timestamp);
+    fprintf(log_file, response.c_str());  // Vulnerable line - format string injection possible
+    fprintf(log_file, "\n\n");
+
+    fclose(log_file);  // Close the file
 }

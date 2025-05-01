@@ -5,3 +5,5 @@ CMakeFiles/
 *.o
 *.log
 *.bin
+.dccache
+.vscode/

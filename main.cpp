@@ -18,7 +18,7 @@ char SERVER_DIR[200];
 void send_authentication_required_response(int client_socket, const char* file_path, const char* request) {
     std::cout << "Requested filepath: " << file_path << std::endl;
 
-    FILE* file = fopen(file_path, "r");
+    FILE* file = fopen(file_path, "r");  //path traversal
     if (file == nullptr) {
         perror("Failed to open file");
         send_error_response(client_socket, 404, "Not Found", file_path);
@@ -82,8 +82,8 @@ void handle_request(int client_socket, const char* request) {
     char* path = path_start + 5;
 
     char file_path[200];
-    strcpy(file_path, SERVER_DIR);
-    strcat(file_path, path);
+    strcpy(file_path, SERVER_DIR); //buffer overflow
+    strcat(file_path, path); //buffer overflow
 
     int authentication_result = perform_authentication(client_socket, file_path, request);
     free(request_copy);
@@ -106,7 +106,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    strcpy(SERVER_DIR, argv[1]);
+    strcpy(SERVER_DIR, argv[1]);  //buffer overflow
     int port = atoi(argv[2]);
 
     int server_socket, client_socket;
