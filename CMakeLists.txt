@@ -15,6 +15,7 @@ add_executable(damn_vulnerable_web_server
     error_handling.cpp
     authentication.cpp
     base64.cpp
+    utils.cpp
 )
 
 # Only apply flags after target is defined

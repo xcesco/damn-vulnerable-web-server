@@ -10,54 +10,56 @@
 #include "mime_type_handler.h"
 #include "request_logger.h"
 #define MAX_REQUEST_SIZE 1024
-
+#include "utils.h"
 #include "error_handling.h"
 
 char SERVER_DIR[200];
 
 void send_authentication_required_response(int client_socket, const char* file_path, const char* request) {
-    std::cout << "Requested filepath: " << file_path << std::endl;
+    std::string response_header;
 
     FILE* file = fopen(file_path, "r");  //path traversal
+
     if (file == nullptr) {
         perror("Failed to open file");
+        response_header = "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\n\r\nFile Not Found";
         send_error_response(client_socket, 404, "Not Found", file_path);
+        log_request_response(request, response_header);
         return;
     }
 
-    std::cout << "Serving file: " << file_path << std::endl;
-
     if (check_php_file(file_path)) {
-        char response_header[200];
-        snprintf(response_header, sizeof(response_header), "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n");
-        handle_php_file(file, &client_socket, response_header);
-    } else {
-        const char* content_type = get_content_type(file_path);
-
-        char response_header[200];
-        sprintf(response_header, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\n\r\n", content_type);
-        log_request_response(request, response_header);
-
-        if (send(client_socket, response_header, strlen(response_header), 0) < 0) {
-            perror("Failed to send response header");
-            fclose(file);
-            return;
-        }
-
-        char file_buffer[1024];
-        size_t bytes_read;
-        while ((bytes_read = fread(file_buffer, 1, sizeof(file_buffer), file)) > 0) {
-            if (send(client_socket, file_buffer, bytes_read, 0) < 0) {
-                perror("Failed to send file");
-                fclose(file);
-                return;
-            }
-        }
-
+        response_header = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
+        log_request_response(request, response_header);  // Log even for PHP
+        handle_php_file(file, &client_socket, response_header.c_str());
         fclose(file);
+        return;
     }
 
-    close(client_socket);
+    const char* content_type = get_content_type(file_path);
+    char header_buf[200];
+    sprintf(header_buf, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\n\r\n", content_type);
+    response_header = header_buf;
+
+    log_request_response(request, response_header); 
+
+    if (send(client_socket, header_buf, strlen(header_buf), 0) < 0) {
+        perror("Failed to send response header");
+        fclose(file);
+        return;
+    }
+
+    char file_buffer[1024];
+    size_t bytes_read;
+    while ((bytes_read = fread(file_buffer, 1, sizeof(file_buffer), file)) > 0) {
+        if (send(client_socket, file_buffer, bytes_read, 0) < 0) {
+            perror("Failed to send file");
+            break;
+        }
+    }
+
+    fclose(file);
+
 }
 
 void handle_request(int client_socket, const char* request) {
@@ -79,11 +81,19 @@ void handle_request(int client_socket, const char* request) {
     }
 
     *path_end = '\0';
-    char* path = path_start + 5;
+    char* path_with_query = path_start + 5;
+
+    char clean_path[200]; 
+    strcpy(clean_path, path_with_query); //buffer overflow
+
+    char* query = strchr(clean_path, '?');
+    if (query) {
+        *query = '\0';
+    }
 
     char file_path[200];
     strcpy(file_path, SERVER_DIR); //buffer overflow
-    strcat(file_path, path); //buffer overflow
+    strcat(file_path, clean_path); //buffer overflow
 
     int authentication_result = perform_authentication(client_socket, file_path, request);
     free(request_copy);
