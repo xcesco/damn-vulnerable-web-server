@@ -20,3 +20,7 @@ Vulnerable Web Server written in C++
 * Command Injection
 * Session Fixation
 * Insecure Temporary File Creation Race Condition
+
+
+#### Solutions
+[Solutions Wiki](https://github.com/snoopysecurity/damn-vulnerable-web-server/wiki)
