@@ -18,3 +18,4 @@ Vulnerable Web Server written in C++
 * Path Traversal
 * Uncontrolled format string
 * Command Injection
+* Session Fixation

@@ -273,6 +273,54 @@ request_logger.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/damn_vulnerable_web_server.dir/build.make CMakeFiles/damn_vulnerable_web_server.dir/request_logger.cpp.s
 .PHONY : request_logger.cpp.s
 
+session_manager.o: session_manager.cpp.o
+.PHONY : session_manager.o
+
+# target to build an object file
+session_manager.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/damn_vulnerable_web_server.dir/build.make CMakeFiles/damn_vulnerable_web_server.dir/session_manager.cpp.o
+.PHONY : session_manager.cpp.o
+
+session_manager.i: session_manager.cpp.i
+.PHONY : session_manager.i
+
+# target to preprocess a source file
+session_manager.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/damn_vulnerable_web_server.dir/build.make CMakeFiles/damn_vulnerable_web_server.dir/session_manager.cpp.i
+.PHONY : session_manager.cpp.i
+
+session_manager.s: session_manager.cpp.s
+.PHONY : session_manager.s
+
+# target to generate assembly for a file
+session_manager.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/damn_vulnerable_web_server.dir/build.make CMakeFiles/damn_vulnerable_web_server.dir/session_manager.cpp.s
+.PHONY : session_manager.cpp.s
+
+utils.o: utils.cpp.o
+.PHONY : utils.o
+
+# target to build an object file
+utils.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/damn_vulnerable_web_server.dir/build.make CMakeFiles/damn_vulnerable_web_server.dir/utils.cpp.o
+.PHONY : utils.cpp.o
+
+utils.i: utils.cpp.i
+.PHONY : utils.i
+
+# target to preprocess a source file
+utils.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/damn_vulnerable_web_server.dir/build.make CMakeFiles/damn_vulnerable_web_server.dir/utils.cpp.i
+.PHONY : utils.cpp.i
+
+utils.s: utils.cpp.s
+.PHONY : utils.s
+
+# target to generate assembly for a file
+utils.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/damn_vulnerable_web_server.dir/build.make CMakeFiles/damn_vulnerable_web_server.dir/utils.cpp.s
+.PHONY : utils.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -300,6 +348,12 @@ help:
 	@echo "... request_logger.o"
 	@echo "... request_logger.i"
 	@echo "... request_logger.s"
+	@echo "... session_manager.o"
+	@echo "... session_manager.i"
+	@echo "... session_manager.s"
+	@echo "... utils.o"
+	@echo "... utils.i"
+	@echo "... utils.s"
 .PHONY : help
 
 

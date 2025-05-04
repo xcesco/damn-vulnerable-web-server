@@ -12,10 +12,11 @@
 #define MAX_REQUEST_SIZE 1024
 #include "utils.h"
 #include "error_handling.h"
+#include "session_manager.h"
 
 char SERVER_DIR[200];
 
-void send_authentication_required_response(int client_socket, const char* file_path, const char* request) {
+void send_authentication_required_response(int client_socket, const char* file_path, const char* request, const std::string& set_cookie_header = "") {
     std::string response_header;
 
     FILE* file = fopen(file_path, "r");  //path traversal
@@ -29,7 +30,10 @@ void send_authentication_required_response(int client_socket, const char* file_p
     }
 
     if (check_php_file(file_path)) {
-        response_header = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
+        response_header = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n";
+        if (!set_cookie_header.empty()) response_header += set_cookie_header;
+        response_header += "\r\n";
+
         log_request_response(request, response_header);  // Log even for PHP
         handle_php_file(file, &client_socket, response_header.c_str());
         fclose(file);
@@ -37,13 +41,16 @@ void send_authentication_required_response(int client_socket, const char* file_p
     }
 
     const char* content_type = get_content_type(file_path);
-    char header_buf[200];
-    sprintf(header_buf, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\n\r\n", content_type);
+    char header_buf[512];
+    snprintf(header_buf, sizeof(header_buf),
+             "HTTP/1.1 200 OK\r\nContent-Type: %s\r\n%s\r\n",
+             content_type,
+             set_cookie_header.empty() ? "" : set_cookie_header.c_str());
+
     response_header = header_buf;
+    log_request_response(request, response_header);
 
-    log_request_response(request, response_header); 
-
-    if (send(client_socket, header_buf, strlen(header_buf), 0) < 0) {
+    if (send(client_socket, response_header.c_str(), response_header.length(), 0) < 0) {
         perror("Failed to send response header");
         fclose(file);
         return;
@@ -59,8 +66,8 @@ void send_authentication_required_response(int client_socket, const char* file_p
     }
 
     fclose(file);
-
 }
+
 
 void handle_request(int client_socket, const char* request) {
     char* request_copy = strdup(request);
@@ -104,19 +111,28 @@ void handle_request(int client_socket, const char* request) {
     strcpy(file_path, SERVER_DIR); //buffer overflow
     strcat(file_path, clean_path); //buffer overflow
 
-    int authentication_result = perform_authentication(client_socket, file_path, request);
-    free(request_copy);
+        // Retrieve the session ID from the cookie
+        std::string session_id = get_session_id_from_cookie(request);
+        std::string set_cookie_header = "";
+    
+        if (session_id.empty()) {
+            session_id = generate_session_id();
+            set_cookie_header = "Set-Cookie: session_id=" + session_id + "; HttpOnly; Path=/\r\n";
+            sessions[session_id] = "default_user_data";
+        }
+    
+        // Check if session is valid (e.g., user authentication status)
+    
+        // Now you can use session data for authentication
+        std::string user_data = get_session_data(session_id);
 
-    if (authentication_result == 0) {
+    
+        // Perform your regular file handling, authentication, etc.
+        send_authentication_required_response(client_socket, file_path, request, set_cookie_header);
         close(client_socket);
-        std::cout << "Auth Failed" << std::endl;
-        return;
+        free(request_copy);
     }
 
-    std::cout << "perform_authentication completed" << std::endl;
-    send_authentication_required_response(client_socket, file_path, request);
-    close(client_socket);
-}
 
 int main(int argc, char* argv[]) {
     if (argc < 3) {
