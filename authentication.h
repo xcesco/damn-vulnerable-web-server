@@ -4,10 +4,8 @@
 #include <string>
 #include <map>
 
-int authenticate(const std::string& username, const std::string& password);
-int perform_authentication(int client_socket, const std::string& file_path, const std::string& request);
-void send_basic_auth_prompt(int client_socket);
-std::string extract_header_value(const std::string& request, const std::string& header_name);
-std::map<std::string, std::string> extract_query_parameters(const std::string& request);
 
+int authenticate(const std::string& username, const std::string& password);
+void send_basic_auth_prompt(int client_socket);
+void handle_authentication(int client_socket, const std::string& username);
 #endif //UNTITLED11_AUTHENTICATION_H

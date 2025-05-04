@@ -19,7 +19,7 @@ void log_request_response(const std::string& request, const std::string& respons
 
     // Extract query parameters from the request
     std::map<std::string, std::string> query_params = extract_query_parameters(request);
-    std::cerr << "Logging request and response..." << std::endl;
+    // std::cerr << "Logging request and response..." << std::endl;
 
     // Log to file
     FILE* log_file = fopen("/tmp/server.log", "a");

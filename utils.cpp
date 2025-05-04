@@ -6,6 +6,9 @@
 #include <cctype>
 #include "base64.h"
 #include <iomanip>
+#include <cstdlib>
+#include <cstdio>
+
 
 std::string url_decode(const std::string& str) {
     std::string decoded_str;
@@ -45,7 +48,12 @@ std::string extract_header_value(const std::string &request, const std::string &
         value_pos++;
     }
 
-    return request.substr(value_pos);
+    size_t end_of_line = request.find("\r\n", value_pos);
+    if (end_of_line == std::string::npos) {
+        end_of_line = request.find('\n', value_pos); // fallback
+    }
+    return request.substr(value_pos, end_of_line - value_pos);
+
 }
 
 // Extract query parameters from the request line (e.g., GET /path?param=value HTTP/1.1)
@@ -109,10 +117,39 @@ bool extract_username_password(const std::string &authorization_header, std::str
         return false;
     }
 
+    std::cout << "Authorization header (raw): [" << authorization_header << "]\n";
+    std::cout << "Base64 decoded: [" << decoded_credentials << "]\n";
+
     *colon = '\0';
     username = std::string(reinterpret_cast<char *>(decoded_credentials));
     password = colon + 1;
     free(decoded_credentials);
 
+
+
     return true;
+}
+
+
+const char* get_php_interpreter_path() {
+    static char path[256];  // static ensures it persists after function returns
+    FILE* fp = popen("which php", "r");
+    if (fp == NULL) {
+        perror("[ERROR] popen failed");
+        return NULL;
+    }
+
+    if (fgets(path, sizeof(path), fp) == NULL) {
+        pclose(fp);
+        return NULL;
+    }
+    pclose(fp);
+
+    // Strip newline
+    size_t len = strlen(path);
+    if (len > 0 && path[len - 1] == '\n') {
+        path[len - 1] = '\0';
+    }
+
+    return path;
 }

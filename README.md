@@ -19,3 +19,4 @@ Vulnerable Web Server written in C++
 * Uncontrolled format string
 * Command Injection
 * Session Fixation
+* Insecure Temporary File Creation Race Condition

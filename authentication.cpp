@@ -39,44 +39,21 @@ void send_basic_auth_prompt(int client_socket) {
 
 
 // Function to perform authentication for a given file path
-int perform_authentication(int client_socket, const std::string& file_path, const std::string& original_request) {
-    std::string request = original_request;
+void handle_authentication(int client_socket, const std::string& username) {
+    // 🚨 Type Confusion: Misinterpreting std::string as char*
+    // Using const_cast to cast away const-ness and create a vulnerability
+    char* leaked_ptr = const_cast<char*>(username.c_str());  // Type confusion
 
-    size_t filename_pos = file_path.find_last_of('/');
-    std::string filename = (filename_pos != std::string::npos) ? file_path.substr(filename_pos + 1) : file_path;
+    const char* preamble = "Leaked internal username object bytes:\n";
+    send(client_socket, preamble, strlen(preamble), 0);
+    
+    // Leak internal bytes of the std::string username object (misinterpreted as a char* pointer)
+    send(client_socket, leaked_ptr, 64, 0);  // Potential data leakage (depending on implementation)
 
-    // Extract and print query parameters
-    std::map<std::string, std::string> query_params = extract_query_parameters(original_request);
-    if (!query_params.empty()) {
-        std::cout << "Query parameters:\n";
-        for (const auto& [key, value] : query_params) {
-            std::cout << key << " = " << value << "\n";
-        }
-    }
-
-    if (filename.find("test/echo.php") != std::string::npos || filename.find("g.php") != std::string::npos) {
-        std::string authorization_header = extract_header_value(request, "Authorization:");
-
-        if (authorization_header.empty()) {
-            send_basic_auth_prompt(client_socket);
-            return 0;
-        }
-
-        std::string username;
-        std::string password;
-
-        if (!extract_username_password(authorization_header, username, password)) {
-            send_basic_auth_prompt(client_socket);
-            return 0;
-        }
-
-        if (authenticate(username, password)) {
-            return 1;
-        } else {
-            send_basic_auth_prompt(client_socket);
-            return 0;
-        }
-    }
-
-    return 1;
+    // Further operations or handling after potential type confusion
+    std::cout << "Extracted Username: " << username << std::endl;
+    // Additional processing logic...
+    const char* ok = "\nHTTP/1.1 200 OK\r\n\r\nWelcome!";
+    send(client_socket, ok, strlen(ok), 0);
 }
+

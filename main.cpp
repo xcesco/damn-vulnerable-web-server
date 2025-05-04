@@ -90,48 +90,69 @@ void handle_request(int client_socket, const char* request) {
     *path_end = '\0';
     char* path_with_query = path_start + 5;
 
-    char clean_path[200]; 
-    strcpy(clean_path, path_with_query); //buffer overflow
+    char clean_path[200];
+    strcpy(clean_path, path_with_query);
 
     char* query = strchr(clean_path, '?');
     if (query) {
         *query = '\0';
     }
 
-    // 🚨 Special path for viewing logs
-    if (strcmp(clean_path, "logs") == 0) {
-        handle_log_viewer(client_socket, request);  // new function to display /tmp/server.log
-        close(client_socket);
-        free(request_copy);
+    if (clean_path[0] != '/') {
+        char temp_path[200];
+        sprintf(temp_path, "/%s", clean_path);  // Add a leading slash
+        strcpy(clean_path, temp_path); // Update clean_path with leading slash
+    }
+    
+
+    // Check if the path starts with "/admin"
+    std::cout << "Request Path: " << clean_path << std::endl;
+    if (strncmp(clean_path, "/admin/", 7) == 0) {
+        std::string authorization_header = extract_header_value(request, "Authorization:");
+        if (authorization_header.empty()) {
+            send_basic_auth_prompt(client_socket);
+            close(client_socket);
+            free(request_copy);
+            return;
+        }
+
+        std::string username;
+        std::string password;
+
+        if (!extract_username_password(authorization_header, username, password)) {
+            send_basic_auth_prompt(client_socket);
+            close(client_socket);
+            free(request_copy);
+            return;
+        }
+
+        if (authenticate(username, password)) {
+            // Authentication successful, proceed with request handling
+            char file_path[200];
+            strcpy(file_path, SERVER_DIR);
+            strcat(file_path, clean_path);  // Path to the requested file
+
+            send_authentication_required_response(client_socket, file_path, request);
+            close(client_socket);
+            free(request_copy);
+        } else {
+            // Authentication failed, send unauthorized response
+            send_basic_auth_prompt(client_socket);
+            close(client_socket);
+            free(request_copy);
+        }
         return;
     }
-    
 
+    // If the path is not under /admin, proceed with regular request handling
     char file_path[200];
-    strcpy(file_path, SERVER_DIR); //buffer overflow
-    strcat(file_path, clean_path); //buffer overflow
+    strcpy(file_path, SERVER_DIR);
+    strcat(file_path, clean_path);
 
-        // Retrieve the session ID from the cookie
-        std::string session_id = get_session_id_from_cookie(request);
-        std::string set_cookie_header = "";
-    
-        if (session_id.empty()) {
-            session_id = generate_session_id();
-            set_cookie_header = "Set-Cookie: session_id=" + session_id + "; HttpOnly; Path=/\r\n";
-            sessions[session_id] = "default_user_data";
-        }
-    
-        // Check if session is valid (e.g., user authentication status)
-    
-        // Now you can use session data for authentication
-        std::string user_data = get_session_data(session_id);
-
-    
-        // Perform your regular file handling, authentication, etc.
-        send_authentication_required_response(client_socket, file_path, request, set_cookie_header);
-        close(client_socket);
-        free(request_copy);
-    }
+    send_authentication_required_response(client_socket, file_path, request);
+    close(client_socket);
+    free(request_copy);
+}
 
 
 int main(int argc, char* argv[]) {

@@ -8,4 +8,6 @@ std::string extract_header_value(const std::string& request, const std::string& 
 std::map<std::string, std::string> extract_query_parameters(const std::string& request);
 bool extract_username_password(const std::string& authorization_header, std::string& username, std::string& password);
 std::string url_decode(const std::string& str);
+const char* get_php_interpreter_path();
 #endif
+

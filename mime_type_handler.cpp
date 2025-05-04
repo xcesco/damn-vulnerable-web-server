@@ -1,6 +1,7 @@
 // mime_type_handler.cpp
 
 #include "mime_type_handler.h"
+#include "utils.h"
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
@@ -63,7 +64,8 @@ void handle_php_file(FILE* file, int* client_socket, const char* response_header
     }
     fclose(temp_file);
 
-    const char* interpreter_path = "/opt/homebrew/bin/php";
+    const char* interpreter_path = get_php_interpreter_path();
+
     char command[256];
     snprintf(command, sizeof(command), "%s %s", interpreter_path, temp_file_path);
 
