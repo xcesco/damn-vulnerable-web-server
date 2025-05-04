@@ -68,7 +68,6 @@ void send_authentication_required_response(int client_socket, const char* file_p
     fclose(file);
 }
 
-
 void handle_request(int client_socket, const char* request) {
     char* request_copy = strdup(request);
     char* path_start = strstr(request_copy, "GET /");
@@ -98,15 +97,23 @@ void handle_request(int client_socket, const char* request) {
         *query = '\0';
     }
 
+    // 🚨 Special path for viewing logs
+    if (strcmp(clean_path, "logs") == 0) {
+        handle_log_viewer(client_socket, request);  // log_viewer function still in place
+        close(client_socket);
+        free(request_copy);
+        return;
+    }
+
     if (clean_path[0] != '/') {
         char temp_path[200];
         sprintf(temp_path, "/%s", clean_path);  // Add a leading slash
         strcpy(clean_path, temp_path); // Update clean_path with leading slash
     }
-    
+
+    std::cout << "Request Path: " << clean_path << std::endl;
 
     // Check if the path starts with "/admin"
-    std::cout << "Request Path: " << clean_path << std::endl;
     if (strncmp(clean_path, "/admin/", 7) == 0) {
         std::string authorization_header = extract_header_value(request, "Authorization:");
         if (authorization_header.empty()) {
@@ -132,7 +139,17 @@ void handle_request(int client_socket, const char* request) {
             strcpy(file_path, SERVER_DIR);
             strcat(file_path, clean_path);  // Path to the requested file
 
-            send_authentication_required_response(client_socket, file_path, request);
+            // Cookie management (set session cookie for authenticated user)
+            std::string session_id = get_session_id_from_cookie(request);
+            std::string set_cookie_header = "";
+            if (session_id.empty()) {
+                session_id = generate_session_id();
+                set_cookie_header = "Set-Cookie: session_id=" + session_id + "; HttpOnly; Path=/\r\n";
+                sessions[session_id] = "default_user_data";
+            }
+    
+            // Retrieve session data and perform file handling
+            send_authentication_required_response(client_socket, file_path, request, set_cookie_header);
             close(client_socket);
             free(request_copy);
         } else {
@@ -149,7 +166,16 @@ void handle_request(int client_socket, const char* request) {
     strcpy(file_path, SERVER_DIR);
     strcat(file_path, clean_path);
 
-    send_authentication_required_response(client_socket, file_path, request);
+    // Cookie management for regular paths
+    std::string session_id = get_session_id_from_cookie(request);
+    std::string set_cookie_header = "";
+    if (session_id.empty()) {
+        session_id = generate_session_id();
+        set_cookie_header = "Set-Cookie: session_id=" + session_id + "; HttpOnly; Path=/\r\n";
+        sessions[session_id] = "default_user_data";
+    }
+    
+    send_authentication_required_response(client_socket, file_path, request, set_cookie_header);
     close(client_socket);
     free(request_copy);
 }
